@@ -1,16 +1,14 @@
 import argparse
 import os
-import numpy as np
-import speech_recognition as sr
-import whisper
-import torch
 import pytz
+import transcriber
+import speech_recognition as sr
 
-from datetime import datetime, timedelta
+
 from queue import Queue
 from time import sleep
 from sys import platform
-
+from datetime import datetime, timedelta
 
 def main():
     parser = argparse.ArgumentParser()
@@ -58,16 +56,6 @@ def main():
     else:
         source = sr.Microphone(device_index=1, sample_rate=16000)
 
-    # Load / Download model
-    model = args.model
-
-    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-    print("Using GPU to run whisper!") if torch.cuda.is_available() else print("Using CPU to run whisper!")
-
-    if args.model != "large" and not args.non_english:
-        model = model + ".en"
-    audio_model = whisper.load_model(model, device=DEVICE)
-
     record_timeout = args.record_timeout
     phrase_timeout = args.phrase_timeout
 
@@ -76,7 +64,7 @@ def main():
     with source:
         recorder.adjust_for_ambient_noise(source)
 
-    def record_callback(_, audio:sr.AudioData) -> None:
+    def record_callback(_, audio: sr.AudioData) -> None:
         """
         Threaded callback function to receive audio data when recordings finish.
         audio: An AudioData containing the recorded bytes.
@@ -97,7 +85,7 @@ def main():
 
     while True:
         try:
-            now = datetime.now(tz = SGtimezone)
+            now = datetime.now(tz=SGtimezone)
             # Pull raw recorded audio from the queue.
             if not data_queue.empty():
                 phrase_complete = False
@@ -107,33 +95,24 @@ def main():
                     phrase_complete = True
                 # This is the last time we received new audio data from the queue.
                 phrase_time = now
-                
+
                 # Combine audio data from queue
                 audio_data = b''.join(data_queue.queue)
                 data_queue.queue.clear()
-                
-                # Convert in-ram buffer to something the model can use directly without needing a temp file.
-                # Convert data from 16 bit wide integers to floating point with a width of 32 bits.
-                # Clamp the audio stream frequency to a PCM wavelength compatible default of 32768hz max.
-                audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
 
-                # Read the transcription.
-                result = audio_model.transcribe(audio_np, fp16=torch.cuda.is_available())
-                text = result['text'].strip()
+                # Save audio data to a temporary file
+                temp_file_path = "temp_audio.wav"
+                with open(temp_file_path, "wb") as f:
+                    f.write(audio_data)
 
-                # Add detected speech to transcrption
+                # Transcribe the audio using the transcriber module
+                text = transcriber.transcribe_audio(temp_file_path, args.model, args.non_english)
+
+                # Add detected speech to transcription
                 transcription.append(text)
 
-                # If we detected a pause between recordings, add a new item to our transcription.
-                # Otherwise edit the existing one.
-                #if phrase_complete:
-                    #transcription.append(text)
-                #else:
-                    #transcription.append(text)
-                    #transcription[-1] = text
-
                 # Clear the console to reprint the updated transcription.
-                os.system('cls' if os.name=='nt' else 'clear')
+                os.system('cls' if os.name == 'nt' else 'clear')
                 for line in transcription:
                     print(line)
                 # Flush stdout.
