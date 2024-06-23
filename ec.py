@@ -2,14 +2,16 @@ import numpy as np
 from scipy.optimize import differential_evolution
 
 def differential_evolution_optimization(cost_func, bounds):
-    result = differential_evolution(cost_func, bounds, strategy='best1bin', maxiter=1000, popsize=15)
+    result = differential_evolution(cost_func, bounds, strategy='best1bin', maxiter=1000, popsize=25,
+                                    tol=1e-6, mutation=(0.5, 1), recombination=0.7, 
+                                    seed=42, polish=True, disp=True)
     return result.x, result.fun
 
 if __name__ == "__main__":
-    # Enhanced cost function to simulate server response time
+    # Simulate server response time
     def cost_func(params):
         load = params[0]
-        noise = np.random.normal(0, 0.1)  # Adding some noise
+        noise = np.random.normal(0, 0.1)  # Add some noise
         response_time = np.log(1 + load) + noise  # Simulate non-linear increase in response time
         return response_time
 

@@ -1,5 +1,5 @@
+# Import necessary modules
 import threading
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 from bandit import NeuralBandit
@@ -23,7 +23,7 @@ def simulate_ddos_mitigation():
     epsilon_min = 0.01  # Minimum value of epsilon
     scaler = StandardScaler()
 
-    for iteration in range(100):  # Increase the number of iterations
+    for iteration in range(100):
         context = np.random.rand(context_dim)  # Simulate random context
         context = scaler.fit_transform(context.reshape(-1, 1)).flatten()  # Normalize context
 
@@ -46,6 +46,7 @@ def simulate_ddos_mitigation():
 
         bandit.update(context, chosen_arm, reward)
         print(f'Chosen Arm: {chosen_arm}, Reward: {reward}')
+        print(f'Optimized parameters for iteration {iteration}: {params}')
 
         # Monitor server performance after applying the mitigation strategy
         response_time = monitor_server_performance()

