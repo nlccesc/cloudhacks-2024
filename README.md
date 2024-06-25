@@ -53,3 +53,29 @@ Swarm Optimization: Implements a custom Reinforcement Learning-based Swarm Optim
 ## Conclusion ##
 
 I have integrated AI techniques and optimization algorithms to provide a novel and adaptive solution for DDoS attack prevention. By leveraging continuous learning and dynamic strategy selection, it offers a robust and scalable approach to mitigating evolving cyber threats with the interweaving of evolutionary computation and machine learning.
+
+
+## UPDATES (25/06/2024)
+
+Network Architecture:
+
+
+Changed network architecture from a standard network to a dueling network. This improved learning efficiency and stability by separating value and advantage streams.
+
+
+Experience Replay:
+
+Samples experiences now based on priority where it focuses on more informative transitions compared to the previous iteration where it samples experiences uniformly
+
+Experience Tuple:
+
+Added 'next_context' which allows for Temporal Difference (TD) error calculation
+
+Training Process:
+
+Added importance-sampling weights in the loss function so that it adjusts the updates based on the sampling probabilities so that it reduces bias.
+
+Improvements: 
+- increased max rewards from 0.4 to 0.5.
+- decreased server response time by 25.7%.
+
