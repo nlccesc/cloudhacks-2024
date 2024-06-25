@@ -25,7 +25,9 @@ def simulate_ddos_mitigation():
 
     for iteration in range(100):
         context = np.random.rand(context_dim)  # Simulate random context
+        next_context = np.random.rand(context_dim)  # Simulate next random context
         context = scaler.fit_transform(context.reshape(-1, 1)).flatten()  # Normalize context
+        next_context = scaler.fit_transform(next_context.reshape(-1, 1)).flatten()  # Normalize next context
 
         chosen_arm = bandit.select_arm(context, epsilon)
         chosen_arms.append(chosen_arm)
@@ -44,7 +46,7 @@ def simulate_ddos_mitigation():
         reward = -score  # In a real scenario, this would be based on actual server response
         rewards.append(reward)
 
-        bandit.update(context, chosen_arm, reward)
+        bandit.update(context, chosen_arm, reward, next_context)
         print(f'Chosen Arm: {chosen_arm}, Reward: {reward}')
         print(f'Optimized parameters for iteration {iteration}: {params}')
 
