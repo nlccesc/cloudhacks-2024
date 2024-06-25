@@ -77,5 +77,5 @@ Added importance-sampling weights in the loss function so that it adjusts the up
 
 Improvements: 
 - increased max rewards from 0.4 to 0.5.
-- decreased server response time by 25.7%. (2.14s to 1.59s)
+- decreased server response time by 25.7% (2.14s to 1.59s). 
 
