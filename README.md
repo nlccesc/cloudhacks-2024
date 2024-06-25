@@ -65,11 +65,11 @@ Changed network architecture from a standard network to a dueling network. This 
 
 Experience Replay:
 
-Samples experiences now based on priority where it focuses on more informative transitions compared to the previous iteration where it samples experiences uniformly
+Samples experiences now based on priority where it focuses on more informative transitions compared to the previous iteration where it samples experiences uniformly.
 
 Experience Tuple:
 
-Added 'next_context' which allows for Temporal Difference (TD) error calculation
+Added 'next_context' which allows for Temporal Difference (TD) error calculation.
 
 Training Process:
 
@@ -77,5 +77,5 @@ Added importance-sampling weights in the loss function so that it adjusts the up
 
 Improvements: 
 - increased max rewards from 0.4 to 0.5.
-- decreased server response time by 25.7%.
+- decreased server response time by 25.7%. (2.14s to 1.59s)
 
