@@ -12,8 +12,9 @@ Experience = namedtuple('Experience', ('context', 'action', 'reward', 'next_cont
 class DuelingNetwork(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(DuelingNetwork, self).__init__()
-        self.fc1 = nn.Linear(input_dim, 128)
-        self.dropout1 = nn.Dropout(0.3)
+        self.fc1 = nn.Linear(input_dim, 256)  # Increased number of neurons
+        self.fc2 = nn.Linear(256, 128)        # Added another layer
+        self.dropout1 = nn.Dropout(0.2)       # Slightly reduced dropout rate
         
         self.value_stream = nn.Sequential(
             nn.Linear(128, 64),
@@ -30,6 +31,7 @@ class DuelingNetwork(nn.Module):
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         x = self.dropout1(x)
+        x = torch.relu(self.fc2(x))           # Added second layer activation
         
         value = self.value_stream(x)
         advantage = self.advantage_stream(x)
@@ -79,7 +81,7 @@ class PrioritizedExperienceReplay:
         return len(self.memory)
 
 class NeuralBandit:
-    def __init__(self, n_arms, context_dim, replay_buffer_size=1000, batch_size=32, gamma=0.99, lr=0.001):
+    def __init__(self, n_arms, context_dim, replay_buffer_size=10000, batch_size=64, gamma=0.99, lr=0.0005):
         self.n_arms = n_arms
         self.context_dim = context_dim
         self.replay_buffer = PrioritizedExperienceReplay(replay_buffer_size)
@@ -88,11 +90,11 @@ class NeuralBandit:
 
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         self.bert_model = BertModel.from_pretrained('bert-base-uncased')
-        self.model = DuelingNetwork(768, n_arms)  # BERT embeddings have 768 dimensions
-        self.target_model = DuelingNetwork(768, n_arms)  # Target network for Double Q-Learning
+        self.model = DuelingNetwork(768, n_arms)
+        self.target_model = DuelingNetwork(768, n_arms)
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.criterion = nn.MSELoss()
-        self.update_target_network()  # Initialize target network
+        self.update_target_network()
 
     def update_target_network(self):
         self.target_model.load_state_dict(self.model.state_dict())
@@ -125,7 +127,7 @@ class NeuralBandit:
         if len(self.replay_buffer) >= self.batch_size:
             self.train()
 
-    def train(self, beta=0.4):
+    def train(self, beta=0.4, update_target_every=10):
         batch, weights, indices = self.replay_buffer.sample(self.batch_size, beta)
         contexts, actions, rewards, next_contexts = zip(*batch)
 
@@ -147,8 +149,9 @@ class NeuralBandit:
 
         self.replay_buffer.update_priorities(indices, td_errors)
 
-        # Update target network periodically
-        self.update_target_network()
+        # Update target network less frequently
+        if len(self.replay_buffer) % update_target_every == 0:
+            self.update_target_network()
 
 # Example usage
 if __name__ == "__main__":

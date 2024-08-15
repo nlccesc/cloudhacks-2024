@@ -1,3 +1,5 @@
+# si.py
+
 import numpy as np
 
 class Particle:
@@ -8,7 +10,10 @@ class Particle:
         self.best_score = float('inf')
 
 class RSO:
-    def __init__(self, cost_func, bounds, num_particles=30, max_iter=100, alpha=0.1, lr=0.9):
+    def __init__(self, 
+                 cost_func, 
+                 bounds, 
+                 num_particles=30, max_iter=100, alpha=0.1, lr=0.9):
         self.cost_func = cost_func
         self.bounds = bounds
         self.num_particles = num_particles
